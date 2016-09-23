@@ -16,84 +16,8 @@
 
 import UIKit
 
-@objc @IBDesignable public class CCMRadarView: UIView{
-    
-    //var color: UIColor = UIColor.blueColor()
-    private var animating: Bool = false
-    
-    @IBInspectable public var reversedRadar:Bool = false{
-        didSet{
-            initialSetup()
-        }
-    }
-    
-    @IBInspectable public var numberOfWaves:Int = 4{
-        didSet{
-            initialSetup()
-        }
-    }
-    
-    @IBInspectable public var radarColor: UIColor = UIColor.blueColor() {
-        didSet{
-            initialSetup()
-        }
-    }
-    
-    @IBInspectable public var innerRadius: Double = 50.0 {
-        didSet{
-            initialSetup()
-        }
-    }
-    
-    @IBInspectable public var iconImage: UIImage?{
-        didSet{
-            initialSetup()
-        }
-    }
-    
-    @IBInspectable public var iconSize: CGSize = CGSizeMake(20, 20){
-        didSet{
-            initialSetup()
-        }
-    }
-    
-    @IBInspectable public var waveWidth: CGFloat = 2 {
-        didSet{
-            initialSetup()
-        }
-    }
-    
-    @IBInspectable public var maxWaveAlpha: CGFloat = 1 {
-        didSet{
-            initialSetup()
-        }
-    }
-    
-    public func startAnimation() {
-        animating = true
-        if let sublayers = layer.sublayers {
-            for (index,sublayer) in (layer.sublayers as [CALayer]!).enumerate() {
-                if let sublayer = sublayer as? CAShapeLayer {
-                    let animation = CAKeyframeAnimation()
-                    animation.keyPath = "opacity"
-                    animation.values = [0,0,1,0]
-                    animation.duration = 1.5
-                    var beginTime:Double
-                    if (!reversedRadar){
-                        beginTime = (Double(animation.duration)/Double(numberOfWaves + 1)) * (Double(sublayers.count) - 1.0 - Double(index))
-                    } else {
-                        beginTime = (Double(animation.duration)/Double(numberOfWaves + 1)) * Double(index)
-                    }
-                    animation.keyTimes = [0, beginTime/animation.duration, beginTime/animation.duration, (beginTime + Double(animation.duration)/(Double(numberOfWaves) - 2.5))/animation.duration]
-                    animation.delegate = self
-                    sublayer.addAnimation(animation, forKey: "animForLayer\(index)")
-                    sublayer.opacity = 0
-                }
-            }
-        }
-    }
-    
-    override public func animationDidStop(anim: CAAnimation, finished flag: Bool) {
+extension CCMRadarView: CAAnimationDelegate {
+    public func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
         
         if flag{
             if let sublayers = layer.sublayers {
@@ -110,7 +34,89 @@ import UIKit
         }
     }
     
-    private func restoreInitialAlphas(){
+}
+
+@objc @IBDesignable open class CCMRadarView: UIView{
+    
+    //var color: UIColor = UIColor.blueColor()
+    fileprivate var animating: Bool = false
+    
+    @IBInspectable open var reversedRadar:Bool = false{
+        didSet{
+            initialSetup()
+        }
+    }
+    
+    @IBInspectable open var numberOfWaves:Int = 4{
+        didSet{
+            initialSetup()
+        }
+    }
+    
+    @IBInspectable open var radarColor: UIColor = UIColor.blue {
+        didSet{
+            initialSetup()
+        }
+    }
+    
+    @IBInspectable open var innerRadius: Double = 50.0 {
+        didSet{
+            initialSetup()
+        }
+    }
+    
+    @IBInspectable open var iconImage: UIImage?{
+        didSet{
+            initialSetup()
+        }
+    }
+    
+    @IBInspectable open var iconSize: CGSize = CGSize(width: 20, height: 20){
+        didSet{
+            initialSetup()
+        }
+    }
+    
+    @IBInspectable open var waveWidth: CGFloat = 2 {
+        didSet{
+            initialSetup()
+        }
+    }
+    
+    @IBInspectable open var maxWaveAlpha: CGFloat = 1 {
+        didSet{
+            initialSetup()
+        }
+    }
+    
+    open func startAnimation() {
+        animating = true
+        if let sublayers = layer.sublayers {
+            for (index,sublayer) in (layer.sublayers as [CALayer]!).enumerated() {
+                if let sublayer = sublayer as? CAShapeLayer {
+                    let animation = CAKeyframeAnimation()
+                    animation.keyPath = "opacity"
+                    animation.values = [0,0,1,0]
+                    animation.duration = 1.5
+                    var beginTime:Double
+                    if (!reversedRadar){
+                        beginTime = (Double(animation.duration)/Double(numberOfWaves + 1)) * (Double(sublayers.count) - 1.0 - Double(index))
+                    } else {
+                        beginTime = (Double(animation.duration)/Double(numberOfWaves + 1)) * Double(index)
+                    }
+                    let keyTime1 = NSNumber(value: beginTime/animation.duration)
+                    let keyTime2 = NSNumber(value: beginTime/animation.duration)
+                    let keyTime3 = NSNumber(value: (beginTime + Double(animation.duration)/(Double(numberOfWaves) - 2.5))/animation.duration)
+                    animation.keyTimes = [0, keyTime1, keyTime2, keyTime3]
+                    animation.delegate = self
+                    sublayer.add(animation, forKey: "animForLayer\(index)")
+                    sublayer.opacity = 0
+                }
+            }
+        }
+    }
+    
+    fileprivate func restoreInitialAlphas(){
         var currentAlpha = maxWaveAlpha;
         if reversedRadar {
             for _ in 1..<numberOfWaves{
@@ -119,8 +125,8 @@ import UIKit
         }
         
         
-        UIView.animateWithDuration(0.6, animations: { () -> Void in
-            for (_,sublayer) in (self.layer.sublayers as [CALayer]!).enumerate() {
+        UIView.animate(withDuration: 0.6, animations: { () -> Void in
+            for (_,sublayer) in (self.layer.sublayers as [CALayer]!).enumerated() {
                 if sublayer is CAShapeLayer {
                     sublayer.opacity = Float(currentAlpha)
                     if(self.reversedRadar){
@@ -133,7 +139,7 @@ import UIKit
         })
     }
     
-    public func stopAnimation() {
+    open func stopAnimation() {
         animating = false
     }
     
@@ -148,13 +154,13 @@ import UIKit
         initialSetup()
     }
     
-    override public func layoutSubviews() {
+    override open func layoutSubviews() {
         initialSetup()
     }
     
-    private func initialSetup(){
+    fileprivate func initialSetup(){
         layer.sublayers = []
-        let insetOffsetDelta = (Double(CGRectGetHeight(self.layer.bounds)/2) - innerRadius) / Double(numberOfWaves)
+        let insetOffsetDelta = (Double(self.layer.bounds.height/2) - innerRadius) / Double(numberOfWaves)
         //let alphaVariance = (maxWaveAlpha - minWaveAlpha) / CGFloat(numberOfWaves)
         var currentInsetOffset:CGFloat = 0;
         
@@ -167,12 +173,12 @@ import UIKit
         
         for _ in 0..<numberOfWaves {
             let sublayer = CAShapeLayer()
-            sublayer.frame = CGRectInset(self.layer.bounds, currentInsetOffset, currentInsetOffset)
-            let circle = UIBezierPath(ovalInRect: CGRectInset(sublayer.bounds, waveWidth, waveWidth))
-            sublayer.path = circle.CGPath
-            sublayer.strokeColor = radarColor.CGColor
+            sublayer.frame = self.layer.bounds.insetBy(dx: currentInsetOffset, dy: currentInsetOffset)
+            let circle = UIBezierPath(ovalIn: sublayer.bounds.insetBy(dx: waveWidth, dy: waveWidth))
+            sublayer.path = circle.cgPath
+            sublayer.strokeColor = radarColor.cgColor
             sublayer.lineWidth = waveWidth
-            sublayer.fillColor = UIColor.clearColor().CGColor
+            sublayer.fillColor = UIColor.clear.cgColor
             sublayer.opacity = Float(currentAlpha)
             layer.addSublayer(sublayer)
             currentInsetOffset += CGFloat(insetOffsetDelta)
@@ -184,7 +190,7 @@ import UIKit
         }
         
         if let image = iconImage {
-            let imageView = UIImageView(frame: CGRectMake((self.bounds.width - iconSize.width) / 2.0, (self.bounds.height - iconSize.height) / 2.0, iconSize.width, iconSize.height))
+            let imageView = UIImageView(frame: CGRect(x: (self.bounds.width - iconSize.width) / 2.0, y: (self.bounds.height - iconSize.height) / 2.0, width: iconSize.width, height: iconSize.height))
             imageView.image = image
             self.addSubview(imageView)
         }
